@@ -1,7 +1,5 @@
 package pl.players;
 
-import com.sun.scenario.effect.impl.sw.java.JSWBlend_MULTIPLYPeer;
-
 import javax.imageio.ImageIO;
 
 import java.awt.*;
@@ -14,86 +12,102 @@ import java.util.Random;
 
 public class PlayersTree {
 
+    private final int DISTANCE_BETWEEN_LEVELS = 30;
+    private final int STANDARD_COLUMN_WIDTH = 60;
+
     private Graphics2D ig2;
     private FontMetrics fontMetrics;
     private BufferedImage bi;
-    private List<String> players;
-
-    private void drawTreeLevel(int level, List<String> players){
-        //1. Print names
-        //2. Draw lines above the names
-    };
+    private List<Player> players;
 
     private void generateTree(){
         int treeLevels = (int)Math.round(Math.ceil(Math.log(players.size())/Math.log(2))) + 1;
         System.out.println("Tree levels:" + treeLevels);
-        int w2, h2 = 50 + treeLevels * 100;
+        int w2, h2 = 50 + treeLevels * DISTANCE_BETWEEN_LEVELS;
 
         long currentTreeLevel = treeLevels;
-        int stringColumnWidth = 100;
+        int stringColumnWidth = STANDARD_COLUMN_WIDTH;
 
+        w2 = 10;
+        int w2_temp = 0;
         do {
             currentTreeLevel--;
             System.out.println("Drawing the " + currentTreeLevel + " tree level ....");
 
-            w2 = 10;
-            for (String s : players) {
+            w2_temp = w2;
+            for (Player p : players) {
+                String s = p.getName();
                 int stringLength = fontMetrics.stringWidth(s);
-                int stringHeigth = fontMetrics.getAscent();
+                int stringHeight = fontMetrics.getAscent();
 
-                ig2.drawString(s, w2, h2);
+                ig2.drawString(s, w2_temp, h2);
 
-                int x1 = w2 + stringLength/2;
-                int y1 = h2 - stringHeigth/2 - 10;
-                int y2 = h2 - 25;
-                ig2.drawLine(x1,y1,x1,y2);
+                if(players.size() != 1) {
+                    int x1 = w2_temp + stringLength / 2;
+                    int y1 = h2 - stringHeight / 2 - 10;
+                    int y2 = h2 - 25;
+                    ig2.drawLine(x1, y1, x1, y2);
+                    p.setMiddle_x(x1);
+                    p.setMiddle_y(y2);
 
-                System.out.println(s + " " + stringLength);
-                w2 += stringLength + (stringColumnWidth - stringLength);
+                    w2_temp += stringLength + (stringColumnWidth - stringLength);
+                }
             }
 
-            w2 = 10;
-            List<String> losers = new ArrayList<String>();
-            Random r = new Random();
-            for(int i=0; i<players.size(); i=i+2){
-                String player1 = players.get(i);
-                int player1StringLength = fontMetrics.stringWidth(player1);
+            if(players.size() != 1) {
+                w2_temp = w2;
+                List<Player> losers = new ArrayList<>();
+                Random r = new Random();
+                for (int i = 0; i < players.size(); i = i + 2) {
+                    Player player1 = players.get(i);
+                    String player1Name = player1.getName();
+                    int player1StringLength = fontMetrics.stringWidth(player1Name);
 
-                String player2 = players.get(i + 1);
-                int player2StringLength = fontMetrics.stringWidth(player2);
+                    Player player2 = players.get(i + 1);
+                    String player2Name = player2.getName();
+                    int player2StringLength = fontMetrics.stringWidth(player2Name);
 
-                int x1 = w2 + player1StringLength/2;
-                w2 += player1StringLength + (stringColumnWidth - player1StringLength);
-                int x2 = w2 + player2StringLength/2;
-                int y = h2 - 25;
+                    int x1 = w2_temp + player1StringLength / 2;
+                    w2_temp += player1StringLength + (stringColumnWidth - player1StringLength);
+                    int x2 = w2_temp + player2StringLength / 2;
+                    int y = h2 - 25;
 
-                ig2.drawLine(x1,y, x2, y);
-                w2 += player2StringLength + (stringColumnWidth - player2StringLength);
+                    ig2.drawLine(x1, y, x2, y);
+                    w2_temp += player2StringLength + (stringColumnWidth - player2StringLength);
 
-                //Find winner
-                int playerToRemove = r.nextInt(2);
-                losers.add(playerToRemove==0?player1:player2);
+                    //Find winner
+                    int playerToRemove = r.nextInt(2);
+                    losers.add(playerToRemove == 0 ? player1 : player2);
+                }
+
+                h2 -= DISTANCE_BETWEEN_LEVELS;
+                stringColumnWidth *= 2;
+                w2 += (players.get(1).getMiddle_x() - players.get(0).getMiddle_x()) / 2
+                        - fontMetrics.stringWidth(losers.get(0).getName().equals(players.get(0).getName()) ? players.get(1).getName() : players.get(0).getName()) / 2
+                        + fontMetrics.stringWidth(players.get(0).getName()) / 2;
+
+                //Remove half elements
+                for (Player loser : losers) {
+                    players.remove(loser);
+                }
+
             }
 
-            h2 -= 100;
-            stringColumnWidth *= 2;
-
-            //Remove half elements
-            for(String loser : losers){
-                players.remove(loser);
-            };
-            System.out.println(players);
-
-            if(players.size() == 1)
-            break;
         } while(currentTreeLevel != 0);
     }
 
     private void run(){
         try {
-            players = new ArrayList<String>();
-            players.add("Robert"); players.add("Patrick");players.add("Anna");players.add("John");
-            players.add("Gosia");players.add("Mati");players.add("Patric");players.add("Shivs");
+            players = new ArrayList<Player>();
+            players.add(new Player("Robert")); players.add(new Player("Patrick"));players.add(new Player("Anna"));players.add(new Player("John"));
+            players.add(new Player("Gosia"));players.add(new Player("Mati"));players.add(new Player("Patric"));players.add(new Player("Shivs"));
+//            players.add(new Player("Robert")); players.add(new Player("Patrick"));players.add(new Player("Anna"));players.add(new Player("John"));
+//            players.add(new Player("Gosia"));players.add(new Player("Mati"));players.add(new Player("Patric"));players.add(new Player("Shivs"));
+//
+//            players.add(new Player("Robert")); players.add(new Player("Patrick"));players.add(new Player("Anna"));players.add(new Player("John"));
+//            players.add(new Player("Gosia"));players.add(new Player("Mati"));players.add(new Player("Patric"));players.add(new Player("Shivs"));
+//            players.add(new Player("Robert")); players.add(new Player("Patrick"));players.add(new Player("Anna"));players.add(new Player("John"));
+//            players.add(new Player("Gosia"));players.add(new Player("Mati"));players.add(new Player("Patric"));players.add(new Player("Shivs"));
 
             initializeGraphic(players);
 
@@ -105,7 +119,7 @@ public class PlayersTree {
         }
     }
 
-    private void initializeGraphic(List<String> players){
+    private void initializeGraphic(List<Player> players){
         int width = players.size() * 100 + players.size() * 25,
                 height = 500;
 
@@ -119,5 +133,36 @@ public class PlayersTree {
 
     static public void main(String args[]) throws Exception {
         new PlayersTree().run();
+    }
+
+    private class Player {
+
+        private String name;
+        private int middle_x;
+        private int middle_y;
+
+        public Player(String name){
+            this.name = name;
+        }
+
+        public String getName() {
+            return name;
+        }
+
+        public int getMiddle_x() {
+            return middle_x;
+        }
+
+        public void setMiddle_x(int middle_x) {
+            this.middle_x = middle_x;
+        }
+
+        public int getMiddle_y() {
+            return middle_y;
+        }
+
+        public void setMiddle_y(int middle_y) {
+            this.middle_y = middle_y;
+        }
     }
 }
